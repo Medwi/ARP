@@ -1,0 +1,121 @@
+# ARP Platform – Environment Variables
+# Copy this file to .env and fill in values before running.
+# NEVER commit a .env file with real values to git.
+
+# ── Database ──────────────────────────────────────────────────────────────────
+# Local (./EXEC or ./SETUP):  DB_PATH=./data/arp.db
+# Docker Compose:             DB_PATH=/data/arp.db  (volume mount in compose)
+DB_PATH=./data/arp.db
+
+# ── Ollama (local LLM) ────────────────────────────────────────────────────────
+# Local:            OLLAMA_HOST=http://localhost:11434
+# Docker Compose:   OLLAMA_HOST=http://ollama:11434
+OLLAMA_HOST=http://localhost:11434
+
+# Default model — fast on CPU, ~2.2 GB download.
+#   ollama pull phi3:mini
+# Docker: first compose up waits on Ollama healthy; then docker exec arp_ollama ollama pull phi3:mini
+# Without a pulled model, AI Agents show [LLM UNAVAILABLE] — other tabs still work. See docs/OLLAMA.md.
+# Larger alternative: llama3.2:latest (~2 GB, often sharper synthesis)
+OLLAMA_MODEL=phi3:mini
+# Fallback when primary model errors (defaults to same as OLLAMA_MODEL)
+# Distinct from OLLAMA_MODEL so fallback chain is meaningful (default: llama3.2:latest)
+# OLLAMA_FALLBACK_MODEL=llama3.2:latest
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+# URL the Streamlit frontend uses to reach the FastAPI backend.
+# Local: http://localhost:8000   |   Docker: http://backend:8000
+API_URL=http://localhost:8000
+
+# 0 = hide Intelligence & operations workspace (Book & markets only).
+# 1 = enable Intelligence & operations workspace (Briefing, Reporting, Operations, …).
+ENABLE_ENHANCEMENTS=1
+
+# ── Book data scope & persistence ─────────────────────────────────────────────
+# demo_snapshot = seeded assessment book (default); live = production ingest
+# ARP_DATA_SCOPE=demo_snapshot
+# sqlite_demo = assessment SQLite (single file; manual backup; not HA / multi-writer)
+# postgresql  = named production target (HA, concurrent writers, managed RPO)
+# ARP_PERSISTENCE=sqlite_demo
+
+# ── Security (production posture) ─────────────────────────────────────────────
+# Bearer tokens: fixed demo values in README.md; stored as SHA-256 digests in the DB at seed.
+# ARP_ALLOW_LEGACY_PLAIN_TOKENS=0
+# Detailed /health (models, RAG, graph) requires Bearer unless set to 1:
+# ARP_HEALTH_PUBLIC_DETAIL=0
+# Disable Swagger/OpenAPI in production:
+# ARP_DOCS_PUBLIC=0
+
+# ── API middleware (expansion) ────────────────────────────────────────────────
+ENABLE_RATE_LIMITER=1
+ENABLE_REQUEST_LOGGER=1
+# Rate limits (requests per window_seconds). Shared by /ask, briefing, digest, etc.
+# RATE_LIMIT_DEFAULT_MAX=120
+# RATE_LIMIT_DEFAULT_WINDOW=60
+# Demo walkthroughs: raise LLM route budget to avoid 429 during back-to-back agents.
+RATE_LIMIT_ASK_MAX=120
+RATE_LIMIT_ASK_WINDOW=60
+# Default memory = single API worker (local / docker compose up).
+# Redis = shared counters for multi-replica — set automatically in docker-compose.prod.yml (make up-prod).
+# RATE_LIMIT_BACKEND=memory
+# REDIS_URL=redis://redis:6379/0
+# Disable entirely: ENABLE_RATE_LIMITER=0
+
+# ── Market data ───────────────────────────────────────────────────────────────
+# Price source used when seeding the book (re-seed after changing):
+#   mock          modelled prices, fully offline (DEFAULT FOR DEMOS; external_calls: false)
+#   yahoo         Yahoo Finance — public quotes only; external_calls: true on /health
+#   alphavantage  Alpha Vantage — public quotes only; external_calls: true
+# See docs/MARKET_DATA.md — keep mock unless you want the egress conversation.
+MARKET_DATA_SOURCE=mock
+
+# Alpha Vantage credentials. Required when MARKET_DATA_SOURCE=alphavantage.
+# SECURITY: put your key here in .env (gitignored) — never commit it to source.
+# If unset, Alpha Vantage requests are skipped and modelled prices are used.
+ALPHA_VANTAGE_API_KEY=
+AV_BASE_URL=https://www.alphavantage.co/query
+ALPHA_VANTAGE_ENTITLEMENT=delayed
+# Seconds between Alpha Vantage requests (free tier is rate-limited).
+AV_REQUEST_SLEEP=0.9
+
+# ── RAG (local knowledge retrieval) ───────────────────────────────────────────
+# Indexes knowledge/*.md into a vector store on seed; agents retrieve policy excerpts.
+ENABLE_RAG=1
+# Vector store backend:
+#   local   JSON vector index at CHROMA_PATH (default; zero dependencies)
+#   sqlite  SQLite vector database (knowledge_vectors table in the platform DB)
+VECTOR_DB=local
+CHROMA_PATH=./data/chroma
+OLLAMA_EMBED_MODEL=nomic-embed-text
+# Pull embedding model once: ollama pull nomic-embed-text
+RAG_TOP_K=3
+# Set RAG_REINDEX=1 to force a full re-index on next seed.
+# RAG_REINDEX=0
+
+# ── Knowledge graph (entity/relationship reasoning) ───────────────────────────
+# Builds a role-filtered graph over live holdings/trades + policy ontology.
+# Agents traverse it for multi-hop links (ticker -> sector -> limit -> sign-off).
+ENABLE_GRAPH=1
+# Hops to expand from question-matched entities when gathering relevant facts.
+GRAPH_MAX_HOPS=2
+# Max relationship facts injected into the prompt / returned for transparency.
+GRAPH_MAX_FACTS=8
+
+# ── AI conversational memory ──────────────────────────────────────────────────
+# Per-user short-term memory: agents recall recent interactions for continuity.
+MEMORY_ENABLED=1
+# Number of prior interactions injected into the prompt for context.
+MEMORY_RECALL_LIMIT=3
+# Hard cap on stored interactions per user (oldest pruned beyond this).
+MEMORY_MAX_PER_USER=200
+
+# ── Development ───────────────────────────────────────────────────────────────
+# Set ARP_RELOAD=1 to run uvicorn with --reload when using ./EXEC (API dev only).
+ARP_RELOAD=0
+
+# ── Notes ─────────────────────────────────────────────────────────────────────
+# With MARKET_DATA_SOURCE=mock no external API keys are required; external_calls
+# stays false. Live sources fetch only public price quotes (external_calls: true)
+# — no client/position data leaves the machine; LLM inference is always on-device.
+# Auth: use the README.md tester table (seed applies those tokens every run).
+# Optional: make bootstrap-tokens dumps data/.bootstrap_tokens (same values).
