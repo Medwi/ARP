@@ -1,0 +1,74 @@
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+.installed.cfg
+lib/
+lib64/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Testing & coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# ── Database files (NEVER commit real data) ───────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+/data/
+**/chroma/
+**/vectors.json
+.corpus_fingerprint
+
+# ── Ollama model cache ────────────────────────────────────────────────────────
+.ollama/
+
+# ── Docker volumes (local) ────────────────────────────────────────────────────
+docker-volumes/
+
+# ── IDE & OS ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*~
+
+# ── TLS certs (generate locally) ──────────────────────────────────────────────
+deploy/tls/certs/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Jupyter (if used for exploration) ────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
