@@ -4,6 +4,8 @@ Local AI-powered investment operations for a regulated asset-manager assessment.
 
 The seeded book is a **USD 1,000,000** diversified demo mandate (equities, ETFs, fixed income, gold, digital sleeve, cash). Figures are tagged `data_scope: demo_snapshot` — not live fund NAV.
 
+NOTE: For quick testing or review, I recommend using the mock data (fixed, reliable, invariant) and admin role (most comprehensive, all features enabled). This configuration allows for a reliable and fast full overview of the platform.
+
 ---
 
 ## Tester access (start here)
